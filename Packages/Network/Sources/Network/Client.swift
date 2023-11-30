@@ -4,6 +4,7 @@ import Models
 import Observation
 import os
 import SwiftUI
+import RegexBuilder
 
 @Observable public final class Client: Equatable, Identifiable, Hashable {
   public static func == (lhs: Client, rhs: Client) -> Bool {
@@ -15,12 +16,15 @@ import SwiftUI
       lhsToken?.accessToken == rhsToken?.accessToken
   }
 
+//  }
+
   public enum Version: String, Sendable {
     case v1, v2
   }
 
   public enum ClientError: Error {
     case unexpectedRequest
+    case invalidURL
   }
 
   public enum OauthError: Error {
@@ -101,6 +105,7 @@ import SwiftUI
     if type(of: endpoint) == Oauth.self {
       components.path += "/\(endpoint.path())"
     } else {
+        /// TODO: change the endpoint to depend on what api is being used
       components.path += "/api/\(forceVersion?.rawValue ?? version.rawValue)/\(endpoint.path())"
     }
     components.queryItems = endpoint.queryItems()
@@ -138,6 +143,103 @@ import SwiftUI
 
   public func get<Entity: Decodable>(endpoint: Endpoint, forceVersion: Version? = nil) async throws -> Entity {
     try await makeEntityRequest(endpoint: endpoint, method: "GET", forceVersion: forceVersion)
+  }
+  
+  public func getContext<Entity: Decodable>(url: String) async throws -> Entity {
+    
+    let server = Reference(String.self)
+    let username = Reference(String.self)
+    let toot_id = Reference(String.self)
+    let mastodon_regex = Regex {
+      "https://"
+      Capture(as: server) {
+        OneOrMore(CharacterClass(.anyOf("/").inverted))
+      } transform: { String($0) }
+      "/@"
+        OneOrMore(CharacterClass(.anyOf("/").inverted))
+      "/"
+      Capture(as: toot_id) {
+        OneOrMore(CharacterClass(.anyOf("/").inverted))
+      } transform: { String($0) }
+    }
+    let misskey_regex = Regex {
+      "https://"
+      Capture(as: server) {
+        OneOrMore(CharacterClass(.anyOf("/").inverted))
+      } transform: { String($0) }
+      "/notes/"
+      Capture(as: toot_id) {
+        OneOrMore(CharacterClass(.anyOf("/").inverted))
+      } transform: { String($0) }
+    }
+    let plemora_regex = Regex {
+      "https://"
+      Capture(as: server) {
+        OneOrMore(CharacterClass(.anyOf("/").inverted))
+      } transform: { String($0) }
+      "/objects/"
+      Capture(as: toot_id) {
+        OneOrMore(CharacterClass(.anyOf("/").inverted))
+      } transform: { String($0) }
+    }
+    
+    var request: URLRequest
+    var components = URLComponents()
+    
+    components.scheme = "https"
+    
+    if let result = try? mastodon_regex.wholeMatch(in: url) ?? plemora_regex.wholeMatch(in: url) {
+      components.host = result[server]
+      components.path += "/api/v1/statuses/\(result[toot_id])/context"
+      guard let url = components.url else {
+        throw ClientError.unexpectedRequest
+      }
+      request = URLRequest(url: url)
+      request.httpMethod = "GET"
+
+    } else if let result = try? misskey_regex.wholeMatch(in: url) {
+      components.host = result[server]
+      components.path += "/notes/children"
+      guard let url = components.url else {
+        throw ClientError.unexpectedRequest
+      }
+      request = URLRequest(url: url)
+      request.httpMethod = "POST"
+      
+      let encoder = JSONEncoder()
+      encoder.keyEncodingStrategy = .convertToSnakeCase
+      encoder.outputFormatting = .sortedKeys
+      do {
+        let jsonData = try encoder.encode("""
+          {
+            "nameId": "\(result[toot_id])",
+            "limit": 100,
+            "depth": 12
+          }
+        """)
+        request.httpBody = jsonData
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+      } catch {
+        print("Client Error encoding JSON: \(error.localizedDescription)")
+      }
+    } else {
+      throw ClientError.invalidURL
+    }
+    
+    let (data, httpResponse) = try await urlSession.data(for: request)
+    logResponseOnError(httpResponse: httpResponse, data: data)
+    do {
+      return try decoder.decode(Entity.self, from: data)
+    } catch {
+      if var serverError = try? decoder.decode(ServerError.self, from: data) {
+        if let httpResponse = httpResponse as? HTTPURLResponse {
+          serverError.httpCode = httpResponse.statusCode
+        }
+        throw serverError
+      }
+      throw error
+    }
+    
   }
 
   public func getWithLink<Entity: Decodable>(endpoint: Endpoint) async throws -> (Entity, LinkHandler?) {
