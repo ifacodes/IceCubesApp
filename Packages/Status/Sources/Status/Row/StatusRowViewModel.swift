@@ -252,7 +252,7 @@ import SwiftUI
                                                                                   type: "statuses",
                                                                                   offset: 0,
                                                                                   following: nil),
-                                                          forceVersion: .v2)
+                                                          forceAPI: .mastodonV2)
         embed = results.statuses.first
       }
       if let embed {
@@ -382,7 +382,7 @@ import SwiftUI
                                                                                 type: "statuses",
                                                                                 offset: nil,
                                                                                 following: nil),
-                                                        forceVersion: .v2)
+                                                        forceAPI: .mastodonV2)
     if let status = results?.statuses.first {
       localStatusId = status.id
       localStatus = status

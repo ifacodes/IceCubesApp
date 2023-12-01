@@ -61,7 +61,7 @@ import SwiftUI
                                                                                 type: "statuses",
                                                                                 offset: nil,
                                                                                 following: nil),
-                                                        forceVersion: .v2)
+                                                        forceAPI: .mastodonV2)
     if let statusId = results?.statuses.first?.id {
       self.statusId = statusId
       await fetchStatusDetail(animate: false)

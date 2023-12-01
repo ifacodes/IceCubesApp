@@ -80,7 +80,7 @@ public struct FiltersListView: View {
       .task {
         do {
           isLoading = true
-          filters = try await client.get(endpoint: ServerFilters.filters, forceVersion: .v2)
+          filters = try await client.get(endpoint: ServerFilters.filters, forceAPI: .mastodonV2)
           isLoading = false
         } catch {
           isLoading = false
@@ -94,7 +94,7 @@ public struct FiltersListView: View {
       Task {
         do {
           let response = try await client.delete(endpoint: ServerFilters.filter(id: filters[index].id),
-                                                 forceVersion: .v2)
+                                                 forceAPI: .mastodonV2)
           if response?.statusCode == 200 {
             filters.remove(at: index)
           }

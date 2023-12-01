@@ -103,7 +103,7 @@ import SwiftUI
                                                                                 type: nil,
                                                                                 offset: nil,
                                                                                 following: nil),
-                                                        forceVersion: .v2)
+                                                        forceAPI: .mastodonV2)
       let relationships: [Relationship] =
         try await client.get(endpoint: Accounts.relationships(ids: results.accounts.map(\.id)))
       results.relationships = relationships
