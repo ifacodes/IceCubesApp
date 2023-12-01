@@ -532,7 +532,7 @@ import SwiftUI
                                                                                          type: nil,
                                                                                          offset: 0,
                                                                                          following: nil),
-                                                         forceAPI .mastodonV1)
+                                                         forceAPI: .mastodonV1)
           guard !Task.isCancelled else {
             return
           }
