@@ -160,7 +160,7 @@ public enum SheetDestination: Identifiable {
                                                                                 type: "accounts",
                                                                                 offset: nil,
                                                                                 following: nil),
-                                                        forceVersion: .v2)
+                                                        forceAPI: .mastodonV2)
     if let account = results?.accounts.first {
       navigate(to: .accountDetailWithAccount(account: account))
     } else {
@@ -174,7 +174,7 @@ public enum SheetDestination: Identifiable {
                                                                                 type: "accounts",
                                                                                 offset: nil,
                                                                                 following: nil),
-                                                        forceVersion: .v2)
+                                                        forceAPI: .mastodonV2)
     if let account = results?.accounts.first {
       navigate(to: .accountDetailWithAccount(account: account))
     } else {

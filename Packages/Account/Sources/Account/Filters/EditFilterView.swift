@@ -259,10 +259,10 @@ struct EditFilterView: View {
       isSavingFilter = true
       if let filter {
         self.filter = try await client.put(endpoint: ServerFilters.editFilter(id: filter.id, json: data),
-                                           forceVersion: .v2)
+                                           forceAPI: .mastodonV2)
       } else {
         let newFilter: ServerFilter = try await client.post(endpoint: ServerFilters.createFilter(json: data),
-                                                            forceVersion: .v2)
+                                                            forceAPI: .mastodonV2)
         filter = newFilter
       }
     } catch {}
@@ -277,7 +277,7 @@ struct EditFilterView: View {
         client.post(endpoint: ServerFilters.addKeyword(filter: filterId,
                                                        keyword: name,
                                                        wholeWord: true),
-                    forceVersion: .v2)
+                    forceAPI: .mastodonV2)
       keywords.append(keyword)
     } catch {}
     isSavingFilter = false
@@ -287,7 +287,7 @@ struct EditFilterView: View {
     isSavingFilter = true
     do {
       let response = try await client.delete(endpoint: ServerFilters.removeKeyword(id: keyword.id),
-                                             forceVersion: .v2)
+                                             forceAPI: .mastodonV2)
       if response?.statusCode == 200 {
         keywords.removeAll(where: { $0.id == keyword.id })
       }

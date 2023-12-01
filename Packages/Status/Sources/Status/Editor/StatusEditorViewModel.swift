@@ -473,7 +473,7 @@ import SwiftUI
                                                                  type: "hashtags",
                                                                  offset: 0,
                                                                  following: nil),
-                                         forceVersion: .v2)
+                                         forceAPI: .mastodonV2)
           guard !Task.isCancelled else {
             return
           }
@@ -486,7 +486,7 @@ import SwiftUI
                                                                  type: "accounts",
                                                                  offset: 0,
                                                                  following: true),
-                                         forceVersion: .v2)
+                                         forceAPI: .mastodonV2)
           guard !Task.isCancelled else {
             return
           }
@@ -716,7 +716,7 @@ import SwiftUI
   private func uploadMedia(data: Data, mimeType: String) async throws -> MediaAttachment? {
     guard let client else { return nil }
     return try await client.mediaUpload(endpoint: Media.medias,
-                                        version: .v2,
+                                        api: .mastodonV2,
                                         method: "POST",
                                         mimeType: mimeType,
                                         filename: "file",

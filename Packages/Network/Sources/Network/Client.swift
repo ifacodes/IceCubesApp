@@ -16,10 +16,8 @@ import RegexBuilder
       lhsToken?.accessToken == rhsToken?.accessToken
   }
 
-//  }
-
-  public enum Version: String, Sendable {
-    case v1, v2
+  public enum API: String, Sendable {
+    case mastodonV1, mastodonV2, misskey
   }
 
   public enum ClientError: Error {
@@ -44,7 +42,7 @@ import RegexBuilder
   }
 
   public let server: String
-  public let version: Version
+  public let api: API
   private let urlSession: URLSession
   private let decoder = JSONDecoder()
 
@@ -67,9 +65,9 @@ import RegexBuilder
     critical.withLock { $0.connections }
   }
 
-  public init(server: String, version: Version = .v1, oauthToken: OauthToken? = nil) {
+  public init(server: String, api: API = .mastodonV1, oauthToken: OauthToken? = nil) {
     self.server = server
-    self.version = version
+    self.api = api
     critical = .init(initialState: Critical(oauthToken: oauthToken, connections: [server]))
     urlSession = URLSession.shared
     decoder.keyDecodingStrategy = .convertFromSnakeCase
@@ -96,7 +94,7 @@ import RegexBuilder
 
   private func makeURL(scheme: String = "https",
                        endpoint: Endpoint,
-                       forceVersion: Version? = nil,
+                       forceAPI: API? = nil,
                        forceServer: String? = nil) throws -> URL
   {
     var components = URLComponents()
@@ -105,8 +103,14 @@ import RegexBuilder
     if type(of: endpoint) == Oauth.self {
       components.path += "/\(endpoint.path())"
     } else {
-        /// TODO: change the endpoint to depend on what api is being used
-      components.path += "/api/\(forceVersion?.rawValue ?? version.rawValue)/\(endpoint.path())"
+      switch forceAPI ?? api {
+      case .mastodonV1:
+        components.path +=  "/api/v1/\(endpoint.path())"
+      case .mastodonV2:
+        components.path += "/api/v2/\(endpoint.path())"
+      case .misskey:
+        components.path += "\(endpoint.path())"
+      }
     }
     components.queryItems = endpoint.queryItems()
     guard let url = components.url else {
@@ -115,10 +119,10 @@ import RegexBuilder
     return url
   }
 
-  private func makeURLRequest(url: URL, endpoint: Endpoint, httpMethod: String) -> URLRequest {
+  private func makeURLRequest(url: URL, endpoint: Endpoint, httpMethod: String, useOAuth: Bool = true) -> URLRequest {
     var request = URLRequest(url: url)
     request.httpMethod = httpMethod
-    if let oauthToken = critical.withLock({ $0.oauthToken }) {
+    if let oauthToken = critical.withLock({ $0.oauthToken }), useOAuth {
       request.setValue("Bearer \(oauthToken.accessToken)", forHTTPHeaderField: "Authorization")
     }
     if let json = endpoint.jsonValue {
@@ -141,8 +145,8 @@ import RegexBuilder
     return makeURLRequest(url: url, endpoint: endpoint, httpMethod: "GET")
   }
 
-  public func get<Entity: Decodable>(endpoint: Endpoint, forceVersion: Version? = nil) async throws -> Entity {
-    try await makeEntityRequest(endpoint: endpoint, method: "GET", forceVersion: forceVersion)
+  public func get<Entity: Decodable>(endpoint: Endpoint, forceAPI: API? = nil) async throws -> Entity {
+    try await makeEntityRequest(endpoint: endpoint, method: "GET", forceAPI: forceAPI)
   }
   
   public func getContext<Entity: Decodable>(url: String) async throws -> Entity {
@@ -254,12 +258,12 @@ import RegexBuilder
     return try (decoder.decode(Entity.self, from: data), linkHandler)
   }
 
-  public func post<Entity: Decodable>(endpoint: Endpoint, forceVersion: Version? = nil) async throws -> Entity {
-    try await makeEntityRequest(endpoint: endpoint, method: "POST", forceVersion: forceVersion)
+  public func post<Entity: Decodable>(endpoint: Endpoint, forceAPI: API? = nil) async throws -> Entity {
+    try await makeEntityRequest(endpoint: endpoint, method: "POST", forceAPI: forceAPI)
   }
 
-  public func post(endpoint: Endpoint, forceVersion: Version? = nil) async throws -> HTTPURLResponse? {
-    let url = try makeURL(endpoint: endpoint, forceVersion: forceVersion)
+  public func post(endpoint: Endpoint, forceAPI: API? = nil) async throws -> HTTPURLResponse? {
+    let url = try makeURL(endpoint: endpoint, forceAPI: forceAPI)
     let request = makeURLRequest(url: url, endpoint: endpoint, httpMethod: "POST")
     let (_, httpResponse) = try await urlSession.data(for: request)
     return httpResponse as? HTTPURLResponse
@@ -272,12 +276,12 @@ import RegexBuilder
     return httpResponse as? HTTPURLResponse
   }
 
-  public func put<Entity: Decodable>(endpoint: Endpoint, forceVersion: Version? = nil) async throws -> Entity {
-    try await makeEntityRequest(endpoint: endpoint, method: "PUT", forceVersion: forceVersion)
+  public func put<Entity: Decodable>(endpoint: Endpoint, forceAPI: API? = nil) async throws -> Entity {
+    try await makeEntityRequest(endpoint: endpoint, method: "PUT", forceAPI: forceAPI)
   }
 
-  public func delete(endpoint: Endpoint, forceVersion: Version? = nil) async throws -> HTTPURLResponse? {
-    let url = try makeURL(endpoint: endpoint, forceVersion: forceVersion)
+  public func delete(endpoint: Endpoint, forceAPI: API? = nil) async throws -> HTTPURLResponse? {
+    let url = try makeURL(endpoint: endpoint, forceAPI: forceAPI)
     let request = makeURLRequest(url: url, endpoint: endpoint, httpMethod: "DELETE")
     let (_, httpResponse) = try await urlSession.data(for: request)
     return httpResponse as? HTTPURLResponse
@@ -285,9 +289,9 @@ import RegexBuilder
 
   private func makeEntityRequest<Entity: Decodable>(endpoint: Endpoint,
                                                     method: String,
-                                                    forceVersion: Version? = nil) async throws -> Entity
+                                                    forceAPI: API? = nil) async throws -> Entity
   {
-    let url = try makeURL(endpoint: endpoint, forceVersion: forceVersion)
+    let url = try makeURL(endpoint: endpoint, forceAPI: forceAPI)
     let request = makeURLRequest(url: url, endpoint: endpoint, httpMethod: method)
     let (data, httpResponse) = try await urlSession.data(for: request)
     logResponseOnError(httpResponse: httpResponse, data: data)
@@ -336,13 +340,13 @@ import RegexBuilder
   }
 
   public func mediaUpload<Entity: Decodable>(endpoint: Endpoint,
-                                             version: Version,
+                                             api: API,
                                              method: String,
                                              mimeType: String,
                                              filename: String,
                                              data: Data) async throws -> Entity
   {
-    let url = try makeURL(endpoint: endpoint, forceVersion: version)
+    let url = try makeURL(endpoint: endpoint, forceAPI: api)
     var request = makeURLRequest(url: url, endpoint: endpoint, httpMethod: method)
     let boundary = UUID().uuidString
     request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
