@@ -482,16 +482,16 @@ import SwiftUI
           }
         case "@":
           query.removeFirst()
-          results = try await client.get(endpoint: Search.search(query: query,
-                                                                 type: "accounts",
-                                                                 offset: 0,
-                                                                 following: true),
-                                         forceAPI: .mastodonV2)
+          let accounts: [Account] = try await client.get(endpoint: Search.accountsSearch(query: query,
+                                                                                         type: nil,
+                                                                                         offset: 0,
+                                                                                         following: nil),
+                                                         forceAPI .mastodonV1)
           guard !Task.isCancelled else {
             return
           }
           withAnimation {
-            mentionsSuggestions = results?.accounts ?? []
+            mentionsSuggestions = accounts
           }
         default:
           break
