@@ -101,6 +101,8 @@
 		9FFF677C299B7B2C00FE700A /* Notifications in Frameworks */ = {isa = PBXBuildFile; productRef = 9FFF677B299B7B2C00FE700A /* Notifications */; };
 		9FFF6780299B7D2B00FE700A /* DesignSystem in Frameworks */ = {isa = PBXBuildFile; productRef = 9FFF677F299B7D2B00FE700A /* DesignSystem */; };
 		9FFF6782299B7D3A00FE700A /* Account in Frameworks */ = {isa = PBXBuildFile; productRef = 9FFF6781299B7D3A00FE700A /* Account */; };
+		A8F64CE42B500AFB005E1BEA /* Experimental in Resources */ = {isa = PBXBuildFile; fileRef = A8F64CE32B500AFB005E1BEA /* Experimental */; };
+		A8F64CE52B500AFB005E1BEA /* Experimental in Resources */ = {isa = PBXBuildFile; fileRef = A8F64CE32B500AFB005E1BEA /* Experimental */; };
 		C9B22677297F6C2E001F9EFE /* ContentSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9B22676297F6C2E001F9EFE /* ContentSettingsView.swift */; };
 		D08A9C3529956CFA00204A4A /* SwipeActionsSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D08A9C3429956CFA00204A4A /* SwipeActionsSettingsView.swift */; };
 		DA0B24FB2A6876D50045BDD7 /* SFSafeSymbols in Frameworks */ = {isa = PBXBuildFile; productRef = DA0B24FA2A6876D50045BDD7 /* SFSafeSymbols */; };
@@ -243,6 +245,7 @@
 		9FE0346A2ADD59AC00529EA8 /* MediaUI */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = MediaUI; path = Packages/MediaUI; sourceTree = "<group>"; };
 		9FE151A5293C90F900E9683D /* IconSelectorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IconSelectorView.swift; sourceTree = "<group>"; };
 		9FE3DB55296FEF5800628CB0 /* AppAccount */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = AppAccount; path = Packages/AppAccount; sourceTree = "<group>"; };
+		A8F64CE32B500AFB005E1BEA /* Experimental */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = Experimental; path = Packages/Experimental; sourceTree = "<group>"; };
 		B0BAB49E29B3D7A9008F54D7 /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hant"; path = "zh-Hant.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
 		C4CBB90B298A0DA3007E1707 /* en-GB */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "en-GB"; path = "en-GB.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
 		C4FBCF6F298FD88A0015DF22 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
@@ -453,6 +456,7 @@
 		9FBFE630292A715500C250E9 = {
 			isa = PBXGroup;
 			children = (
+				A8F64CE32B500AFB005E1BEA /* Experimental */,
 				DD31E2E5297FB68B00A4BE29 /* IceCubesApp.xcconfig */,
 				9F7D939529800B0300EE6B7A /* IceCubesApp-release.xcconfig */,
 				9FBFE63B292A715500C250E9 /* IceCubesApp */,
@@ -770,6 +774,7 @@
 			files = (
 				069709A5298C8545006E4CB5 /* Atkinson-Hyperlegible-Regular-102.ttf in Resources */,
 				9F18801329AE477F00D85459 /* share.wav in Resources */,
+				A8F64CE42B500AFB005E1BEA /* Experimental in Resources */,
 				9F18801729AE477F00D85459 /* boost.wav in Resources */,
 				9F2A542C296B1177009B2D7C /* glass.caf in Resources */,
 				9F18801529AE477F00D85459 /* pull.wav in Resources */,
@@ -793,6 +798,7 @@
 			files = (
 				E92817FE29844DB700875FD1 /* Assets.xcassets in Resources */,
 				E970C10829845A9400E88A8C /* InfoPlist.strings in Resources */,
+				A8F64CE52B500AFB005E1BEA /* Experimental in Resources */,
 				E9DF420329830FEC0003AAD2 /* Action.js in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
