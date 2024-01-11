@@ -46266,6 +46266,17 @@
         }
       }
     },
+    "settings.experimental.replies" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enable Fetching All Replies"
+          }
+        }
+      }
+    },
     "settings.general.browser" : {
       "localizations" : {
         "be" : {
@@ -51219,6 +51230,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "快取"
+          }
+        }
+      }
+    },
+    "settings.section.experimental" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Experimental ⚠️"
           }
         }
       }

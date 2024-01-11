@@ -39,6 +39,7 @@ struct SettingsTabs: View {
         accountsSection
         generalSection
         otherSections
+        experimentalSection
         cacheSection
       }
       .scrollContentBackground(.hidden)
@@ -301,6 +302,19 @@ struct SettingsTabs: View {
         Text("account.action.logout")
       }
     }
+  }
+  
+  @ViewBuilder
+  private var experimentalSection: some View {
+    @Bindable var preferences = preferences
+    Section("settings.section.experimental") {
+      Toggle(isOn: $preferences.isExperimentalRepliesEnabled) {
+        Label("settings.experimental.replies", systemImage: "bubble.left.and.text.bubble.right")
+      }
+    }    
+    #if !os(visionOS)
+    .listRowBackground(theme.primaryBackgroundColor)
+    #endif
   }
 
   private var cacheSection: some View {
