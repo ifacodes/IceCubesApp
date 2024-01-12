@@ -106,7 +106,7 @@ import SwiftUI
 
   private func fetchContextData(client: Client, statusId: String) async throws -> ContextData {
     async let status: Status = client.get(endpoint: Statuses.status(id: statusId))
-    async let context: StatusContext = client.get(endpoint: Statuses.context(id: statusId))
+    async let context: StatusContext = client.getContext(statusId: statusId)
     return try await .init(status: status, context: context)
   }
 

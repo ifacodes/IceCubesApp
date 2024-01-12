@@ -1,4 +1,5 @@
 import Combine
+import RegexBuilder
 import Foundation
 import Models
 import Observation
@@ -295,6 +296,100 @@ import SwiftUI
     request.httpBody = httpBody as Data
     return request
   }
+  
+  public func getContext<Entity: Decodable>(statusId: String) async throws -> Entity {
+    
+    let server = Reference(String.self)
+    let username = Reference(String.self)
+    let toot_id = Reference(String.self)
+    
+    let mastodon_regex = Regex {
+      "https://"
+      Capture(as: server) {
+        OneOrMore(CharacterClass(.anyOf("/").inverted))
+      } transform: { String($0) }
+      "/@"
+        OneOrMore(CharacterClass(.anyOf("/").inverted))
+      "/"
+      Capture(as: toot_id) {
+        OneOrMore(CharacterClass(.anyOf("/").inverted))
+      } transform: { String($0) }
+    }
+    let misskey_regex = Regex {
+      "https://"
+      Capture(as: server) {
+        OneOrMore(CharacterClass(.anyOf("/").inverted))
+      } transform: { String($0) }
+      "/notes/"
+      Capture(as: toot_id) {
+        OneOrMore(CharacterClass(.anyOf("/").inverted))
+      } transform: { String($0) }
+    }
+    let plemora_regex = Regex {
+      "https://"
+      Capture(as: server) {
+        OneOrMore(CharacterClass(.anyOf("/").inverted))
+      } transform: { String($0) }
+      "/objects/"
+      Capture(as: toot_id) {
+        OneOrMore(CharacterClass(.anyOf("/").inverted))
+      } transform: { String($0) }
+    }
+    
+    let pleroma_notice_regex = Regex {
+      "/notice/"
+      Capture(as: toot_id) {
+        OneOrMore(CharacterClass(.anyOf("/").inverted))
+      } transform: { String($0) }
+    }
+    
+    let status: Status = try await get(endpoint: Statuses.status(id: statusId))
+    
+    if let result = try mastodon_regex.wholeMatch(in: status.url!) {
+      return try await getMastodonStyleContext(server: result[server], toot_id: result[toot_id])
+    } else if let result = try plemora_regex.wholeMatch(in: status.url!) {
+      let server = result[server]
+      let (_, httpResponse) = try await urlSession.data(for: URLRequest(url: URL(string: status.url!)!))
+      guard let result = try pleroma_notice_regex.firstMatch(in: httpResponse.url!.absoluteString) else {
+        throw ClientError.unexpectedRequest
+      }
+      return try await getMastodonStyleContext(server: server, toot_id: result[toot_id])
+    }
+    
+    return try await get(endpoint: Statuses.context(id: statusId))
+    
+  }
+  
+  private func getMastodonStyleContext<Entity: Decodable>(server: String, toot_id: String) async throws -> Entity {
+    var components = URLComponents()
+    components.scheme = "https"
+    components.host = server
+    components.path += "/api/v1/statuses/\(toot_id)/context"
+    
+    guard let url = components.url else {
+      throw ClientError.unexpectedRequest
+    }
+    
+    var request = URLRequest(url: url)
+    request.httpMethod = "GET"
+    
+    let (data, httpResponse) = try await urlSession.data(for: request)
+    logResponseOnError(httpResponse: httpResponse, data: data)
+    do {
+      return try decoder.decode(Entity.self, from: data)
+    } catch {
+      if var serverError = try? decoder.decode(ServerError.self, from: data) {
+        if let httpResponse = httpResponse as? HTTPURLResponse {
+          serverError.httpCode = httpResponse.statusCode
+        }
+        throw serverError
+      }
+      throw error
+    }
+    
+  }
+  
+  private func getMisskeyContext() throws {}
 
   private func logResponseOnError(httpResponse: URLResponse, data: Data) {
     if let httpResponse = httpResponse as? HTTPURLResponse, httpResponse.statusCode > 299 {
