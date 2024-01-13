@@ -300,7 +300,8 @@ import SwiftUI
   public func getContext<Entity: Decodable>(statusId: String) async throws -> Entity {
     
     let server = Reference(String.self)
-    let username = Reference(String.self)
+    //let username
+    _ = Reference(String.self)
     let toot_id = Reference(String.self)
     
     let mastodon_regex = Regex {
@@ -315,7 +316,8 @@ import SwiftUI
         OneOrMore(CharacterClass(.anyOf("/").inverted))
       } transform: { String($0) }
     }
-    let misskey_regex = Regex {
+    //let misskey_regex
+    _ = Regex {
       "https://"
       Capture(as: server) {
         OneOrMore(CharacterClass(.anyOf("/").inverted))
@@ -389,7 +391,9 @@ import SwiftUI
     
   }
   
-  private func getMisskeyContext() throws {}
+  private func getMisskeyContext() throws {
+    
+  }
 
   private func logResponseOnError(httpResponse: URLResponse, data: Data) {
     if let httpResponse = httpResponse as? HTTPURLResponse, httpResponse.statusCode > 299 {
